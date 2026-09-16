@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Галерея</title>
-    <!-- Подключаем клиент Supabase через CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * {
@@ -61,58 +60,6 @@
             margin-bottom: 30px;
         }
 
-        /* Панель загрузки в минималистичном стиле */
-        .upload-box {
-            background: #1a1a1a;
-            padding: 15px 20px;
-            border-radius: 12px;
-            border: 1px solid #333;
-            margin-bottom: 35px;
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            justify-content: center;
-            align-items: center;
-            max-width: 600px;
-            width: 100%;
-        }
-
-        .upload-box input[type="text"] {
-            padding: 10px 14px;
-            border-radius: 8px;
-            border: 1px solid #444;
-            background: #121212;
-            color: #fff;
-            outline: none;
-            font-size: 14px;
-            flex: 1;
-            min-width: 200px;
-        }
-
-        .upload-box input[type="text"]::placeholder {
-            color: #666;
-        }
-
-        .upload-box input[type="file"] {
-            font-size: 13px;
-            color: #aaa;
-        }
-
-        .btn-upload {
-            background: #333;
-            color: #fff;
-            border: 1px solid #555;
-            padding: 10px 18px;
-            border-radius: 8px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-
-        .btn-upload:hover {
-            background: #444;
-        }
-
         .gallery-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
@@ -146,13 +93,6 @@
             background: #111;
         }
 
-        .photo-caption {
-            color: #ccc;
-            font-size: 13px;
-            font-weight: 400;
-            padding: 4px;
-        }
-
         .loading {
             color: #777;
             font-size: 15px;
@@ -167,13 +107,6 @@
     <h1>Галерея</h1>
     <p class="subtitle">Архив воспоминаний</p>
 
-    <!-- Панель загрузки -->
-    <div class="upload-box">
-        <input type="file" id="photoFile" accept="image/*">
-        <input type="text" id="photoCaption" placeholder="Подпись...">
-        <button class="btn-upload" onclick="uploadPhoto()">Загрузить</button>
-    </div>
-
     <div id="loading" class="loading">Загрузка...</div>
     <div class="gallery-grid" id="galleryGrid"></div>
 
@@ -182,85 +115,51 @@
         const SUPABASE_KEY = 'sb_publishable_zIMkSuhL2LtreDRyKVw5BA_Q6Tnib5O';
         
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-        const BUCKET_NAME = 'photos';
+        const BUCKET_NAME = 'photos'; // Используем бакет photos
 
         async function loadGallery() {
             const grid = document.getElementById('galleryGrid');
             const loading = document.getElementById('loading');
 
-            const { data, error } = await supabaseClient
-                .from('photos')
-                .select('*')
-                .order('created_at', { ascending: false });
+            // Получаем список всех файлов напрямую из бакета в Supabase Storage
+            const { data, error } = await supabaseClient.storage
+                .from(BUCKET_NAME)
+                .list('', {
+                    limit: 100,
+                    offset: 0,
+                    sortBy: { column: 'created_at', order: 'desc' }
+                });
 
             loading.style.display = 'none';
 
             if (error) {
                 console.error('Ошибка загрузки:', error);
-                grid.innerHTML = '<p style="color: #ff6b6b; grid-column: 1/-1;">Не удалось загрузить данные...</p>';
+                grid.innerHTML = '<p style="color: #ff6b6b; grid-column: 1/-1;">Не удалось загрузить файлы из хранилища...</p>';
                 return;
             }
 
-            if (!data || data.length === 0) {
+            // Фильтруем, оставляя только файлы изображений
+            const imageFiles = data.filter(file => file.name && file.name !== '.emptyFolderPlaceholder');
+
+            if (!imageFiles || imageFiles.length === 0) {
                 grid.innerHTML = '<p style="color: #666; grid-column: 1/-1;">Здесь пока пусто.</p>';
                 return;
             }
 
             grid.innerHTML = '';
-            data.forEach(item => {
+            imageFiles.forEach(file => {
+                // Получаем публичную ссылку на каждый файл в бакете
+                const { data: urlData } = supabaseClient.storage
+                    .from(BUCKET_NAME)
+                    .getPublicUrl(file.name);
+
                 const card = document.createElement('div');
                 card.className = 'photo-card';
                 card.innerHTML = `
-                    <img src="${item.image_url}" alt="Фото">
-                    <div class="photo-caption">${item.caption || ''}</div>
+                    <img src="${urlData.publicUrl}" alt="Фото">
                 `;
                 grid.appendChild(card);
             });
-        }
-
-        async function uploadPhoto() {
-            const fileInput = document.getElementById('photoFile');
-            const captionInput = document.getElementById('photoCaption');
-            
-            if (fileInput.files.length === 0) {
-                alert('Выберите файл!');
-                return;
-            }
-
-            const file = fileInput.files[0];
-            const fileExt = file.name.split('.').pop();
-            const fileName = `${Date.now()}.${fileExt}`;
-            const filePath = `${fileName}`;
-
-            const { data: uploadData, error: uploadError } = await supabaseClient.storage
-                .from(BUCKET_NAME)
-                .upload(filePath, file);
-
-            if (uploadError) {
-                alert('Ошибка загрузки: ' + uploadError.message);
-                return;
-            }
-
-            const { data: publicUrlData } = supabaseClient.storage
-                .from(BUCKET_NAME)
-                .getPublicUrl(filePath);
-
-            const imageUrl = publicUrlData.publicUrl;
-
-            const { error: dbError } = await supabaseClient
-                .from('photos')
-                .insert([
-                    { image_url: imageUrl, caption: captionInput.value }
-                ]);
-
-            if (dbError) {
-                alert('Ошибка базы данных: ' + dbError.message);
-                return;
-            }
-
-            fileInput.value = '';
-            captionInput.value = '';
-            loadGallery();
         }
 
         loadGallery();
