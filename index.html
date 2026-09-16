@@ -177,7 +177,7 @@
         const CLOUD_NAME = "e6dgp4jb"; 
         const UPLOAD_PRESET = "yzxssnes";
 
-        // Ссылка на твою базу данных Firebase
+        // Твоя новая рабочая база данных
         const BASE_FIREBASE_URL = "https://photosww-c66ce-default-rtdb.europe-west1.firebasedatabase.app";
 
         const gallery = document.getElementById('gallery');
@@ -215,7 +215,7 @@
             gallery.prepend(wrapper);
         }
 
-        // Удаление из базы
+        // Удаление из базы (как в твоем оригинальном рабочем коде)
         async function deletePhoto(key) {
             if (confirm("Точно удалить это фото из галереи?")) {
                 try {
@@ -231,7 +231,7 @@
             }
         }
 
-        // Загрузка фото из Firebase
+        // Загрузка фото из Firebase (оригинальная структура)
         async function loadPhotos() {
             try {
                 const response = await fetch(`${BASE_FIREBASE_URL}.json`);
@@ -246,6 +246,7 @@
             }
         }
        
+        // Сохранение фото в Firebase (оригинальная структура)
         async function savePhotoToFirebase(url, caption) {
             try {
                 const res = await fetch(`${BASE_FIREBASE_URL}.json`, {
