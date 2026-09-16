@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Мне просто очень нравится когда ты улыбаешься, и поэтому я решил создать один небольшой уголок для поднятия твоего настроения</title>
-    
+    <title>Галерея моментов</title>
+    <!-- Подключаем виджет Cloudinary -->
     <script src="https://upload-widget.cloudinary.com/global/all.js" type="text/javascript"></script>
     <style>
         * {
@@ -169,7 +169,7 @@
         <button id="upload_widget" class="btn-upload">+ Добавить фото</button>
     </div>
 
-    <h2>Надеюсь тебе такое понравится</h2>
+    <h2>Галерея моментов</h2>
 
     <div class="gallery" id="gallery"></div>
 
@@ -177,7 +177,7 @@
         const CLOUD_NAME = "e6dgp4jb"; 
         const UPLOAD_PRESET = "yzxssnes";
 
-        
+        // Ссылка на твою базу данных Firebase
         const BASE_FIREBASE_URL = "https://photosww-c66ce-default-rtdb.europe-west1.firebasedatabase.app";
 
         const gallery = document.getElementById('gallery');
@@ -215,7 +215,7 @@
             gallery.prepend(wrapper);
         }
 
-      
+        // Удаление из базы
         async function deletePhoto(key) {
             if (confirm("Точно удалить это фото из галереи?")) {
                 try {
@@ -231,7 +231,7 @@
             }
         }
 
-       
+        // Загрузка фото из Firebase
         async function loadPhotos() {
             try {
                 const response = await fetch(`${BASE_FIREBASE_URL}.json`);
