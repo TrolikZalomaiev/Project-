@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Фотогалерея</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+  :root {
+    --bg: #111;
+    --card: #1c1c1c;
+    --accent: #4f9dff;
+    --text: #eee;
+    --muted: #888;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* --- Экран пароля --- */
+  #lock-screen {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg);
+    z-index: 100;
+    padding: 20px;
+    text-align: center;
+  }
+  #lock-screen h1 { font-size: 1.3rem; margin-bottom: 20px; }
+  #pass-input {
+    font-size: 1.5rem;
+    letter-spacing: 8px;
+    text-align: center;
+    width: 160px;
+    padding: 12px;
+    border-radius: 10px;
+    border: 2px solid #333;
+    background: var(--card);
+    color: var(--text);
+    outline: none;
+  }
+  #pass-input:focus { border-color: var(--accent); }
+  #pass-error { color: #ff6b6b; margin-top: 10px; height: 20px; font-size: 0.9rem; }
+  #unlock-btn {
+    margin-top: 16px;
+    padding: 10px 28px;
+    border: none;
+    border-radius: 10px;
+    background: var(--accent);
+    color: #fff;
+    font-size: 1rem;
+    cursor: pointer;
+  }
+
+  /* --- Галерея --- */
+  #app { display: none; padding: 16px; max-width: 960px; margin: 0 auto; }
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+  header h1 { font-size: 1.2rem; margin: 0; }
+  #upload-btn {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 10px;
+    font-size: 0.95rem;
+    cursor: pointer;
+  }
+  #file-input { display: none; }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 10px;
+  }
+  .photo-card {
+    position: relative;
+    border-radius: 10px;
+    overflow: hidden;
+    background: var(--card);
+    aspect-ratio: 1 / 1;
+  }
+  .photo-card img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .del-btn {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    background: rgba(0,0,0,0.6);
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    font-size: 16px;
+    line-height: 1;
+    cursor: pointer;
+  }
+  #status { color: var(--muted); font-size: 0.9rem; margin: 10px 0; min-height: 18px; }
+  #empty-msg { color: var(--muted); text-align: center; margin-top: 40px; }
+</style>
+</head>
+<body>
+
+  <!-- Экран пароля -->
+  <div id="lock-screen">
+    <h1>Введите пароль</h1>
+    <input id="pass-input" type="password" inputmode="numeric" maxlength="8" autofocus>
+    <div id="pass-error"></div>
+    <button id="unlock-btn">Войти</button>
+  </div>
+
+  <!-- Галерея -->
+  <div id="app">
+    <header>
+      <h1>Фотогалерея</h1>
+      <div>
+        <button id="upload-btn">+ Добавить фото</button>
+        <input id="file-input" type="file" accept="image/*" multiple>
+      </div>
+    </header>
+    <div id="status"></div>
+    <div id="grid" class="grid"></div>
+    <div id="empty-msg" style="display:none;">Фото пока нет</div>
+  </div>
+
+<script>
+  // ==== НАСТРОЙКИ — ЗАПОЛНИ ЭТИ ДВЕ СТРОКИ СВОИМИ ДАННЫМИ ИЗ SUPABASE ====
+  const SUPABASE_URL = "https://avfabbcfwjtpievmpyjl.supabase.co";
+  const SUPABASE_ANON_KEY = "sb_publishable_zIMkSuhL2LtreDRyKVw5BA_Q6Tnib5O";
+  const BUCKET = "photos"; // название бакета в Supabase Storage
+  const CORRECT_PASSWORD = "2302";
+  // =======================================================================
+
+  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  // --- Пароль ---
+  const lockScreen = document.getElementById('lock-screen');
+  const app = document.getElementById('app');
+  const passInput = document.getElementById('pass-input');
+  const passError = document.getElementById('pass-error');
+  const unlockBtn = document.getElementById('unlock-btn');
+
+  function tryUnlock() {
+    if (passInput.value === CORRECT_PASSWORD) {
+      sessionStorage.setItem('gallery_unlocked', '1');
+      showApp();
+    } else {
+      passError.textContent = 'Неверный пароль';
+      passInput.value = '';
+    }
+  }
+  unlockBtn.addEventListener('click', tryUnlock);
+  passInput.addEventListener('keydown', e => { if (e.key === 'Enter') tryUnlock(); });
+
+  function showApp() {
+    lockScreen.style.display = 'none';
+    app.style.display = 'block';
+    loadPhotos();
+  }
+
+  if (sessionStorage.getItem('gallery_unlocked') === '1') {
+    showApp();
+  }
+
+  // --- Галерея ---
+  const grid = document.getElementById('grid');
+  const statusEl = document.getElementById('status');
+  const emptyMsg = document.getElementById('empty-msg');
+  const uploadBtn = document.getElementById('upload-btn');
+  const fileInput = document.getElementById('file-input');
+
+  uploadBtn.addEventListener('click', () => fileInput.click());
+
+  fileInput.addEventListener('change', async () => {
+    const files = Array.from(fileInput.files);
+    if (!files.length) return;
+    statusEl.textContent = 'Загрузка...';
+    for (const file of files) {
+      const filePath = `${Date.now()}_${file.name}`;
+      const { error } = await supabase.storage.from(BUCKET).upload(filePath, file);
+      if (error) {
+        statusEl.textContent = 'Ошибка загрузки: ' + error.message;
+        console.error(error);
+        return;
+      }
+    }
+    fileInput.value = '';
+    statusEl.textContent = '';
+    loadPhotos();
+  });
+
+  async function loadPhotos() {
+    statusEl.textContent = 'Загружаю...';
+    const { data, error } = await supabase.storage.from(BUCKET).list('', {
+      sortBy: { column: 'created_at', order: 'desc' }
+    });
+    statusEl.textContent = '';
+
+    if (error) {
+      statusEl.textContent = 'Ошибка: ' + error.message;
+      console.error(error);
+      return;
+    }
+
+    grid.innerHTML = '';
+    const files = (data || []).filter(f => f.name && !f.name.endsWith('/'));
+
+    emptyMsg.style.display = files.length ? 'none' : 'block';
+
+    for (const file of files) {
+      const { data: urlData } = supabase.storage.from(BUCKET).getPublicUrl(file.name);
+      const card = document.createElement('div');
+      card.className = 'photo-card';
+
+      const img = document.createElement('img');
+      img.src = urlData.publicUrl;
+      img.loading = 'lazy';
+
+      const delBtn = document.createElement('button');
+      delBtn.className = 'del-btn';
+      delBtn.textContent = '×';
+      delBtn.addEventListener('click', () => deletePhoto(file.name));
+
+      card.appendChild(img);
+      card.appendChild(delBtn);
+      grid.appendChild(card);
+    }
+  }
+
+  async function deletePhoto(name) {
+    if (!confirm('Удалить фото?')) return;
+    const { error } = await supabase.storage.from(BUCKET).remove([name]);
+    if (error) {
+      statusEl.textContent = 'Ошибка удаления: ' + error.message;
+      console.error(error);
+      return;
+    }
+    loadPhotos();
+  }
+</script>
+</body>
+</html>
