@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>фото ✨</title>
+    <title>Наши фото ✨</title>
     <!-- Подключаем клиент Supabase через CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
@@ -58,7 +58,53 @@
         p.subtitle {
             color: #777;
             font-size: 15px;
+            margin-bottom: 20px;
+        }
+
+        /* Стили для панели добавления фото */
+        .upload-box {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 15px 20px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(255, 75, 110, 0.1);
             margin-bottom: 30px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            max-width: 600px;
+            width: 100%;
+            border: 2px solid rgba(255, 194, 209, 0.6);
+        }
+
+        .upload-box input[type="text"] {
+            padding: 10px 14px;
+            border-radius: 12px;
+            border: 1px solid #ffc2d1;
+            outline: none;
+            font-size: 14px;
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .upload-box input[type="file"] {
+            font-size: 14px;
+        }
+
+        .btn-upload {
+            background: #ff4b6e;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-upload:hover {
+            background: #e03e5d;
         }
 
         .gallery-grid {
@@ -112,24 +158,30 @@
 
     <a href="index.html" class="btn-back">← Назад</a>
 
-    <h1>фото ✨</h1>
+    <h1>Наши фото ✨</h1>
     <p class="subtitle">Самые уютные и тёплые моменты</p>
 
-    <div id="loading" class="loading"></div>
+    <!-- Панель загрузки нового фото -->
+    <div class="upload-box">
+        <input type="file" id="photoFile" accept="image/*">
+        <input type="text" id="photoCaption" placeholder="Подпись к фото...">
+        <button class="btn-upload" onclick="uploadPhoto()">Загрузить</button>
+    </div>
+
+    <div id="loading" class="loading">Загрузка воспоминаний...</div>
     <div class="gallery-grid" id="galleryGrid"></div>
 
     <script>
-        // Инициализация Supabase с твоими новыми ключами
         const SUPABASE_URL = 'https://avfabbcfwjtpievmpyjl.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_zIMkSuhL2LtreDRyKVw5BA_Q6Tnib5O';
         
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        const BUCKET_NAME = 'photox'; // Имя твоего бакета
 
         async function loadGallery() {
             const grid = document.getElementById('galleryGrid');
             const loading = document.getElementById('loading');
 
-            // Замени 'photos' на название своей таблицы в Supabase, если оно отличается
             const { data, error } = await supabaseClient
                 .from('photos')
                 .select('*')
@@ -153,11 +205,61 @@
                 const card = document.createElement('div');
                 card.className = 'photo-card';
                 card.innerHTML = `
-                    <img src="${item.image_url || item.url}" alt="Фото">
-                    <div class="photo-caption">${item.caption || item.title || '🤍'}</div>
+                    <img src="${item.image_url}" alt="Фото">
+                    <div class="photo-caption">${item.caption || '🤍'}</div>
                 `;
                 grid.appendChild(card);
             });
+        }
+
+        async function uploadPhoto() {
+            const fileInput = document.getElementById('photoFile');
+            const captionInput = document.getElementById('photoCaption');
+            
+            if (fileInput.files.length === 0) {
+                alert('Пожалуйста, выбери файл с фото!');
+                return;
+            }
+
+            const file = fileInput.files[0];
+            const fileExt = file.name.split('.').pop();
+            const fileName = `${Date.now()}.${fileExt}`;
+            const filePath = `${fileName}`;
+
+            // 1. Загружаем файл в бакет 'photox'
+            const { data: uploadData, error: uploadError } = await supabaseClient.storage
+                .from(BUCKET_NAME)
+                .upload(filePath, file);
+
+            if (uploadError) {
+                alert('Ошибка загрузки файла в хранилище: ' + uploadError.message);
+                return;
+            }
+
+            // 2. Получаем публичную ссылку на файл
+            const { data: publicUrlData } = supabaseClient.storage
+                .from(BUCKET_NAME)
+                .getPublicUrl(filePath);
+
+            const imageUrl = publicUrlData.publicUrl;
+
+            // 3. Сохраняем запись с ссылкой в таблицу 'photos'
+            const { error: dbError } = await supabaseClient
+                .from('photos')
+                .insert([
+                    { image_url: imageUrl, caption: captionInput.value }
+                ]);
+
+            if (dbError) {
+                alert('Ошибка сохранения записи в базу данных: ' + dbError.message);
+                return;
+            }
+
+            // Очищаем форму и перезагружаем галерею
+            fileInput.value = '';
+            captionInput.value = '';
+            loadGallery();
+            alert('Фото успешно добавлено! ✨');
         }
 
         loadGallery();
