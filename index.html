@@ -3,9 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Галерея моментов</title>
-    <!-- Подключаем виджет Cloudinary -->
-    <script src="https://upload-widget.cloudinary.com/global/all.js" type="text/javascript"></script>
+    <title>Мои проекты</title>
     <style>
         * {
             box-sizing: border-box;
@@ -17,143 +15,52 @@
             display: flex;
             flex-direction: column;
             align-items: center;
+            justify-content: center;
             min-height: 100vh;
             background: #121212;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             text-align: center;
-            padding: 40px 20px;
+            padding: 20px;
             color: #e0e0e0;
         }
 
-        .nav-box {
-            max-width: 950px;
-            width: 100%;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 35px;
-            animation: fadeIn 1s ease-out;
-        }
-
-        .btn-back {
-            color: #b0b0b0;
-            text-decoration: none;
-            font-weight: 500;
-            font-size: 14px;
-            padding: 10px 20px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 8px;
-            transition: all 0.2s ease;
-        }
-
-        .btn-back:hover {
-            background: rgba(255, 255, 255, 0.1);
-            color: #ffffff;
-        }
-
-        .btn-upload {
-            background: #ffffff;
-            color: #121212;
-            border: none;
-            font-weight: 600;
-            font-size: 14px;
-            padding: 10px 22px;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .btn-upload:hover {
-            background: #e0e0e0;
-            transform: translateY(-1px);
-        }
-
-        h2 {
-            font-size: 24px;
+        h1 {
+            font-size: 26px;
             color: #ffffff;
             margin-bottom: 40px;
             font-weight: 500;
             letter-spacing: 0.5px;
-            animation: fadeIn 1.2s ease-out;
+            animation: fadeIn 1s ease-out;
         }
 
-        .gallery {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 30px;
-            max-width: 950px;
-            width: 100%;
-            animation: fadeIn 1.5s ease-out;
-            padding-bottom: 40px;
-        }
-
-        .photo-wrapper {
-            position: relative;
-            background: #1e1e1e;
-            padding: 14px 14px 18px 14px;
-            border-radius: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.06);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
-            transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
+        .menu-container {
             display: flex;
             flex-direction: column;
-        }
-
-        .photo-wrapper:hover {
-            transform: translateY(-4px);
-            border-color: rgba(255, 255, 255, 0.2);
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
-            z-index: 10;
-        }
-
-        .photo-wrapper img {
+            gap: 16px;
+            max-width: 320px;
             width: 100%;
-            height: 320px;
-            object-fit: cover;
-            border-radius: 8px;
-            background-color: #2a2a2a;
+            animation: fadeIn 1.3s ease-out;
         }
 
-        .photo-caption {
-            margin-top: 14px;
-            font-size: 14px;
-            color: #b0b0b0;
-            font-weight: 400;
-            line-height: 1.4;
-            word-break: break-word;
-            padding: 0 4px;
-            text-align: left;
+        .menu-btn {
+            display: block;
+            background: #1e1e1e;
+            color: #ffffff;
+            text-decoration: none;
+            padding: 18px 24px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            font-size: 16px;
+            font-weight: 500;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
         }
 
-        .btn-delete {
-            position: absolute;
-            top: 24px;
-            right: 24px;
-            background: rgba(18, 18, 18, 0.75);
-            backdrop-filter: blur(4px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 50%;
-            width: 32px;
-            height: 32px;
-            font-size: 14px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 2;
-            opacity: 0;
-        }
-
-        .photo-wrapper:hover .btn-delete {
-            opacity: 1;
-        }
-
-        .btn-delete:hover {
-            background: #ff4b4b;
-            border-color: #ff4b4b;
-            color: white;
+        .menu-btn:hover {
+            transform: translateY(-3px);
+            border-color: rgba(255, 255, 255, 0.2);
+            background: #252525;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
         }
 
         @keyframes fadeIn {
@@ -164,144 +71,12 @@
 </head>
 <body>
 
-    <div class="nav-box">
-        <a href="index.html" class="btn-back">← Главная</a>
-        <button id="upload_widget" class="btn-upload">+ Добавить фото</button>
+    <h1>Выбери раздел</h1>
+
+    <div class="menu-container">
+        <a href="photos.html" class="menu-btn">📷 Галерея моментов</a>
+        <a href="film.html" class="menu-btn">🎬 Список фильмов</a>
     </div>
 
-    <h2>Мне очень нравится твоя улыбка, и я хочу создать для тебя "уголок" в котором я смогу поднять тебе настроение</h2>
-
-    <div class="gallery" id="gallery"></div>
-
-    <script>
-        const CLOUD_NAME = "e6dgp4jb"; 
-        const UPLOAD_PRESET = "yzxssnes";
-
-        // Твоя новая рабочая база данных
-        const BASE_FIREBASE_URL = "https://photosww-c66ce-default-rtdb.europe-west1.firebasedatabase.app/";
-
-        const gallery = document.getElementById('gallery');
-        let renderedKeys = new Set();
-
-        function renderPhoto(key, url, caption = '') {
-            if (renderedKeys.has(key)) return;
-            renderedKeys.add(key);
-
-            const wrapper = document.createElement('div');
-            wrapper.className = 'photo-wrapper';
-            wrapper.id = `photo-${key}`;
-            
-            const photo = document.createElement('img');
-            photo.src = url;
-            photo.alt = caption || 'Фото';
-            photo.loading = 'lazy';
-
-            const deleteBtn = document.createElement('button');
-            deleteBtn.className = 'btn-delete';
-            deleteBtn.innerHTML = '🗑️';
-            deleteBtn.title = 'Удалить фото';
-            deleteBtn.onclick = () => deletePhoto(key);
-
-            wrapper.appendChild(photo);
-            wrapper.appendChild(deleteBtn);
-            
-            if (caption && caption.trim() !== '') {
-                const captionDiv = document.createElement('div');
-                captionDiv.className = 'photo-caption';
-                captionDiv.innerText = caption;
-                wrapper.appendChild(captionDiv);
-            }
-
-            gallery.prepend(wrapper);
-        }
-
-        // Удаление из базы (как в твоем оригинальном рабочем коде)
-        async function deletePhoto(key) {
-            if (confirm("Точно удалить это фото из галереи?")) {
-                try {
-                    await fetch(`${BASE_FIREBASE_URL}/${key}.json`, {
-                        method: 'DELETE'
-                    });
-                    const card = document.getElementById(`photo-${key}`);
-                    if (card) card.remove();
-                    renderedKeys.delete(key);
-                } catch (e) {
-                    alert("Ошибка при удалении!");
-                }
-            }
-        }
-
-        // Загрузка фото из Firebase (оригинальная структура)
-        async function loadPhotos() {
-            try {
-                const response = await fetch(`${BASE_FIREBASE_URL}.json`);
-                const data = await response.json();
-                if (data) {
-                    Object.entries(data).forEach(([key, item]) => {
-                        if (item && item.url) renderPhoto(key, item.url, item.caption || '');
-                    });
-                }
-            } catch (e) {
-                console.error("Ошибка загрузки:", e);
-            }
-        }
-       
-        // Сохранение фото в Firebase (оригинальная структура)
-        async function savePhotoToFirebase(url, caption) {
-            try {
-                const res = await fetch(`${BASE_FIREBASE_URL}.json`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        url: url, 
-                        caption: caption,
-                        timestamp: Date.now() 
-                    })
-                });
-                const data = await res.json();
-                if (data && data.name) {
-                    renderPhoto(data.name, url, caption);
-                }
-            } catch (e) {
-                console.error("Ошибка сохранения:", e);
-            }
-        }
-
-        const myWidget = cloudinary.createUploadWidget({
-            cloudName: CLOUD_NAME, 
-            uploadPreset: UPLOAD_PRESET,
-            sources: ['local', 'camera'],
-            multiple: false,
-            styles: {
-                palette: {
-                    window: "#121212",
-                    windowBorder: "#333333",
-                    tabIcon: "#FFFFFF",
-                    menuBg: "#1e1e1e",
-                    link: "#FFFFFF",
-                    action: "#FFFFFF",
-                    inactiveTabIcon: "#777777",
-                    error: "#F44236",
-                    inProgress: "#ffffff",
-                    complete: "#20B832",
-                    sourceBg: "#181818"
-                }
-            }
-        }, (error, result) => {
-            if (!error && result && result.event === "success") {
-                const imageUrl = result.info.secure_url;
-                setTimeout(() => {
-                    const userCaption = prompt("Добавь подпись к этой фотографии (или оставь пустым):", "");
-                    savePhotoToFirebase(imageUrl, userCaption || '');
-                }, 500);
-            }
-        });
-
-        document.getElementById("upload_widget").addEventListener("click", function(){
-            myWidget.open();
-        }, false);
-
-        loadPhotos();
-    </script>
 </body>
 </html>
