@@ -24,7 +24,7 @@
         }
 
         .nav-box {
-            max-width: 950px;
+            max-width: 800px;
             width: 100%;
             display: flex;
             justify-content: space-between;
@@ -77,10 +77,10 @@
         }
 
         .gallery {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 25px;
-            max-width: 950px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            max-width: 800px;
             width: 100%;
             animation: fadeIn 1.5s ease-out;
             padding-bottom: 40px;
@@ -89,13 +89,14 @@
         .movie-card {
             position: relative;
             background: #1e1e1e;
-            padding: 16px;
+            padding: 18px 20px;
             border-radius: 12px;
             border: 1px solid rgba(255, 255, 255, 0.06);
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
             transition: all 0.3s ease;
             display: flex;
-            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
             text-align: left;
         }
 
@@ -112,49 +113,47 @@
             text-decoration: line-through;
         }
 
-        .movie-img {
-            width: 100%;
-            height: 260px;
-            object-fit: cover;
-            border-radius: 8px;
-            background-color: #2a2a2a;
-            margin-bottom: 12px;
+        .movie-details {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            flex: 1;
+            padding-right: 15px;
         }
 
         .movie-title {
-            font-size: 16px;
+            font-size: 17px;
             font-weight: 600;
             color: #ffffff;
-            margin-bottom: 6px;
+        }
+
+        .movie-info {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            font-size: 13px;
+            color: #b0b0b0;
         }
 
         .movie-genre {
-            display: inline-block;
-            font-size: 12px;
             background: rgba(255, 255, 255, 0.08);
-            color: #b0b0b0;
-            padding: 4px 8px;
+            padding: 2px 8px;
             border-radius: 6px;
-            margin-bottom: 14px;
-            align-self: flex-start;
         }
 
         .movie-actions {
             display: flex;
-            justify-content: space-between;
+            gap: 10px;
             align-items: center;
-            margin-top: auto;
-            padding-top: 10px;
-            border-top: 1px solid rgba(255, 255, 255, 0.05);
         }
 
         .btn-watched {
             background: none;
             border: 1px solid rgba(255, 255, 255, 0.2);
             color: #b0b0b0;
-            padding: 6px 12px;
-            border-radius: 6px;
-            font-size: 12px;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 13px;
             cursor: pointer;
             transition: all 0.2s ease;
         }
@@ -176,11 +175,124 @@
             font-size: 16px;
             cursor: pointer;
             opacity: 0.6;
+            padding: 6px;
             transition: opacity 0.2s;
         }
 
         .btn-delete:hover {
             opacity: 1;
+        }
+
+        /* Модальное окно */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            padding: 20px;
+        }
+
+        .modal {
+            background: #1e1e1e;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 24px;
+            border-radius: 16px;
+            max-width: 400px;
+            width: 100%;
+            text-align: left;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+        }
+
+        .modal h3 {
+            color: #ffffff;
+            font-size: 18px;
+            margin-bottom: 16px;
+            font-weight: 500;
+        }
+
+        .modal label {
+            display: block;
+            font-size: 12px;
+            color: #b0b0b0;
+            margin-bottom: 6px;
+        }
+
+        .modal input {
+            width: 100%;
+            background: #121212;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 10px 14px;
+            color: #ffffff;
+            font-size: 14px;
+            margin-bottom: 16px;
+            outline: none;
+        }
+
+        .modal input:focus {
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .genres-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .genre-chip {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #e0e0e0;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 13px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+        }
+
+        .genre-chip:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .genre-chip.selected {
+            background: #ffffff;
+            color: #121212;
+            font-weight: 600;
+            border-color: #ffffff;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .modal-btn {
+            flex: 1;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn-cancel {
+            background: rgba(255, 255, 255, 0.05);
+            color: #b0b0b0;
+        }
+
+        .btn-submit {
+            background: #ffffff;
+            color: #121212;
         }
 
         @keyframes fadeIn {
@@ -200,15 +312,78 @@
 
     <div class="gallery" id="gallery"></div>
 
-    <script>
-        const CLOUD_NAME = "e6dgp4jb"; 
-        const UPLOAD_PRESET = "yzxssnes";
+    <!-- Модальное окно ввода фильма -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal">
+            <h3>Добавить фильм</h3>
+            
+            <label>Название фильма</label>
+            <input type="text" id="movieTitleInput" placeholder="Например: Начало">
 
-        
+            <label>Год (необязательно)</label>
+            <input type="text" id="movieYearInput" placeholder="2010">
+
+            <label>Жанр</label>
+            <div class="genres-grid" id="genresGrid">
+                <div class="genre-chip selected" data-genre="Драма">Драма</div>
+                <div class="genre-chip" data-genre="Комедия">Комедия</div>
+                <div class="genre-chip" data-genre="Боевик">Боевик</div>
+                <div class="genre-chip" data-genre="Триллер">Триллер</div>
+                <div class="genre-chip" data-genre="Ужасы">Ужасы</div>
+                <div class="genre-chip" data-genre="Фантастика">Фантастика</div>
+                <div class="genre-chip" data-genre="Мелодрама">Мелодрама</div>
+                <div class="genre-chip" data-genre="Детектив">Детектив</div>
+            </div>
+
+            <div class="modal-buttons">
+                <button class="modal-btn btn-cancel" id="modalCancel">Отмена</button>
+                <button class="modal-btn btn-submit" id="modalSubmit">Добавить</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
         const BASE_FIREBASE_URL = "https://films-c651e-default-rtdb.firebaseio.com/";
 
         const gallery = document.getElementById('gallery');
         let renderedKeys = new Set();
+        let selectedGenre = "Драма";
+
+        document.querySelectorAll('.genre-chip').forEach(chip => {
+            chip.addEventListener('click', () => {
+                document.querySelectorAll('.genre-chip').forEach(c => c.classList.remove('selected'));
+                chip.classList.add('selected');
+                selectedGenre = chip.getAttribute('data-genre');
+            });
+        });
+
+        const modalOverlay = document.getElementById('modalOverlay');
+        const addMovieBtn = document.getElementById('add_movie_btn');
+        const modalCancel = document.getElementById('modalCancel');
+        const modalSubmit = document.getElementById('modalSubmit');
+        const titleInput = document.getElementById('movieTitleInput');
+        const yearInput = document.getElementById('movieYearInput');
+
+        addMovieBtn.addEventListener('click', () => {
+            titleInput.value = '';
+            yearInput.value = '';
+            modalOverlay.style.display = 'flex';
+        });
+
+        modalCancel.addEventListener('click', () => {
+            modalOverlay.style.display = 'none';
+        });
+
+        modalSubmit.addEventListener('click', () => {
+            const title = titleInput.value.trim();
+            if (!title) {
+                alert("Введите название фильма!");
+                return;
+            }
+
+            saveMovieToFirebase(title, selectedGenre, yearInput.value.trim());
+            modalOverlay.style.display = 'none';
+        });
 
         function renderMovie(key, data) {
             if (renderedKeys.has(key)) return;
@@ -218,15 +393,14 @@
             card.className = `movie-card ${data.watched ? 'watched' : ''}`;
             card.id = `movie-${key}`;
 
-            let imgHtml = '';
-            if (data.url) {
-                imgHtml = `<img src="${data.url}" class="movie-img" alt="Постер">`;
-            }
-
             card.innerHTML = `
-                ${imgHtml}
-                <div class="movie-title">${escapeHtml(data.title)}</div>
-                <div class="movie-genre">${escapeHtml(data.genre)}</div>
+                <div class="movie-details">
+                    <div class="movie-title">${escapeHtml(data.title)}</div>
+                    <div class="movie-info">
+                        <span class="movie-genre">${escapeHtml(data.genre)}</span>
+                        ${data.year ? `<span>• ${escapeHtml(data.year)}</span>` : ''}
+                    </div>
+                </div>
                 <div class="movie-actions">
                     <button class="btn-watched" onclick="toggleWatched('${key}', ${!data.watched})">
                         ${data.watched ? '✓ Просмотрено' : 'Смотреть'}
@@ -238,15 +412,12 @@
             gallery.prepend(card);
         }
 
-       
         function escapeHtml(text) {
             if (!text) return '';
             return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
         }
 
-       
         async function loadMovies() {
-            if (!BASE_FIREBASE_URL || BASE_FIREBASE_URL.includes("ВСТАВЬ")) return;
             try {
                 const response = await fetch(`${BASE_FIREBASE_URL}.json`);
                 const data = await response.json();
@@ -260,8 +431,7 @@
             }
         }
 
-        
-        async function saveMovieToFirebase(title, genre, url) {
+        async function saveMovieToFirebase(title, genre, year) {
             try {
                 const res = await fetch(`${BASE_FIREBASE_URL}.json`, {
                     method: 'POST',
@@ -269,21 +439,20 @@
                     body: JSON.stringify({ 
                         title: title, 
                         genre: genre,
-                        url: url || '',
+                        year: year || '',
                         watched: false,
                         timestamp: Date.now() 
                     })
                 });
                 const data = await res.json();
                 if (data && data.name) {
-                    renderMovie(data.name, { title, genre, url, watched: false });
+                    renderMovie(data.name, { title, genre, year, watched: false });
                 }
             } catch (e) {
                 console.error("Ошибка сохранения:", e);
             }
         }
 
-        
         window.toggleWatched = async function(key, newStatus) {
             try {
                 await fetch(`${BASE_FIREBASE_URL}/${key}/watched.json`, {
@@ -304,7 +473,6 @@
             }
         }
 
-        // Удаление фильма
         window.deleteMovie = async function(key) {
             if (confirm("Точно удалить этот фильм из списка?")) {
                 try {
@@ -319,32 +487,6 @@
                 }
             }
         }
-
-        
-            }
-        }, (error, result) => {
-            if (!error && result && result.event === "success") {
-                const posterUrl = result.info.secure_url;
-                askMovieDetails(posterUrl);
-            }
-        });
-
-        function askMovieDetails(posterUrl = '') {
-            const title = prompt("Введите название фильма:", "");
-            if (!title || title.trim() === "") return;
-
-            const genre = prompt("Введите жанр (например: Драма, Ужасы, Триллер):", "Фильм");
-            saveMovieToFirebase(title, genre || 'Фильм', posterUrl);
-        }
-
-        document.getElementById("add_movie_btn").addEventListener("click", function(){
-           
-            if (confirm("Хотите добавить фильм с постером (картинкой)? Нажмите «ОК» (для постера) или «Отмена» (просто название и жанр).")) {
-                myWidget.open();
-            } else {
-                askMovieDetails('');
-            }
-        }, false);
 
         loadMovies();
     </script>
