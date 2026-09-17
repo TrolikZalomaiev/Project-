@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Список фильмов</title>
+    <!-- Подключаем виджет Cloudinary -->
+    <script src="https://upload-widget.cloudinary.com/global/all.js" type="text/javascript"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            background: #121212;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            text-align: center;
+            padding: 40px 20px;
+            color: #e0e0e0;
+        }
+
+        .nav-box {
+            max-width: 950px;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 35px;
+            animation: fadeIn 1s ease-out;
+        }
+
+        .btn-back {
+            color: #b0b0b0;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 14px;
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-back:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+        }
+
+        .btn-upload {
+            background: #ffffff;
+            color: #121212;
+            border: none;
+            font-weight: 600;
+            font-size: 14px;
+            padding: 10px 22px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-upload:hover {
+            background: #e0e0e0;
+            transform: translateY(-1px);
+        }
+
+        h2 {
+            font-size: 24px;
+            color: #ffffff;
+            margin-bottom: 40px;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            animation: fadeIn 1.2s ease-out;
+        }
+
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            max-width: 950px;
+            width: 100%;
+            animation: fadeIn 1.5s ease-out;
+            padding-bottom: 40px;
+        }
+
+        .movie-card {
+            position: relative;
+            background: #1e1e1e;
+            padding: 16px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            text-align: left;
+        }
+
+        .movie-card:hover {
+            border-color: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
+        }
+
+        .movie-card.watched {
+            opacity: 0.5;
+        }
+
+        .movie-card.watched .movie-title {
+            text-decoration: line-through;
+        }
+
+        .movie-img {
+            width: 100%;
+            height: 340px;
+            object-fit: cover;
+            border-radius: 8px;
+            background-color: #2a2a2a;
+            margin-bottom: 12px;
+        }
+
+        .movie-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 6px;
+        }
+
+        .movie-info {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            font-size: 12px;
+            color: #b0b0b0;
+            margin-bottom: 14px;
+            flex-wrap: wrap;
+        }
+
+        .movie-genre {
+            background: rgba(255, 255, 255, 0.08);
+            padding: 4px 8px;
+            border-radius: 6px;
+        }
+
+        .movie-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: auto;
+            padding-top: 10px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .btn-watched {
+            background: none;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #b0b0b0;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-watched:hover {
+            border-color: #ffffff;
+            color: #ffffff;
+        }
+
+        .movie-card.watched .btn-watched {
+            background: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+            border-color: transparent;
+        }
+
+        .btn-delete {
+            background: none;
+            border: none;
+            font-size: 16px;
+            cursor: pointer;
+            opacity: 0.6;
+            transition: opacity 0.2s;
+        }
+
+        .btn-delete:hover {
+            opacity: 1;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="nav-box">
+        <a href="index.html" class="btn-back">← Главная</a>
+        <button id="add_movie_btn" class="btn-upload">+ Добавить фильм</button>
+    </div>
+
+    <h2>Список фильмов к просмотру</h2>
+
+    <div class="gallery" id="gallery"></div>
+
+    <script>
+        const CLOUD_NAME = "e6dgp4jb"; 
+        const UPLOAD_PRESET = "yzxssnes";
+
+        // ⚠️ ВСТАВЬ СЮДА ССЫЛКУ НА СВОЮ НОВУЮ БАЗУ ДАННЫХ ФИЛЬМОВ ИЗ FIREBASE
+        const BASE_FIREBASE_URL = "ВСТАВЬ_ССЫЛКУ_НА_БАЗУ_ФИЛЬМОВ";
+
+        const gallery = document.getElementById('gallery');
+        let renderedKeys = new Set();
+
+        function renderMovie(key, data) {
+            if (renderedKeys.has(key)) return;
+            renderedKeys.add(key);
+
+            const card = document.createElement('div');
+            card.className = `movie-card ${data.watched ? 'watched' : ''}`;
+            card.id = `movie-${key}`;
+
+            let imgHtml = '';
+            if (data.url) {
+                imgHtml = `<img src="${data.url}" class="movie-img" alt="Постер">`;
+            }
+
+            card.innerHTML = `
+                ${imgHtml}
+                <div class="movie-title">${escapeHtml(data.title)}</div>
+                <div class="movie-info">
+                    <span class="movie-genre">${escapeHtml(data.genre)}</span>
+                    ${data.year ? `<span>• ${escapeHtml(data.year)}</span>` : ''}
+                </div>
+                <div class="movie-actions">
+                    <button class="btn-watched" onclick="toggleWatched('${key}', ${!data.watched})">
+                        ${data.watched ? '✓ Просмотрено' : 'Смотреть'}
+                    </button>
+                    <button class="btn-delete" onclick="deleteMovie('${key}')" title="Удалить">🗑️</button>
+                </div>
+            `;
+
+            gallery.prepend(card);
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        }
+
+        async function loadMovies() {
+            if (!BASE_FIREBASE_URL || BASE_FIREBASE_URL.includes("ВСТАВЬ")) return;
+            try {
+                const response = await fetch(`${BASE_FIREBASE_URL}.json`);
+                const data = await response.json();
+                if (data) {
+                    Object.entries(data).forEach(([key, item]) => {
+                        if (item && item.title) renderMovie(key, item);
+                    });
+                }
+            } catch (e) {
+                console.error("Ошибка загрузки:", e);
+            }
+        }
+
+        async function saveMovieToFirebase(title, genre, year, url) {
+            try {
+                const res = await fetch(`${BASE_FIREBASE_URL}.json`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        title: title, 
+                        genre: genre,
+                        year: year || '',
+                        url: url || '',
+                        watched: false,
+                        timestamp: Date.now() 
+                    })
+                });
+                const data = await res.json();
+                if (data && data.name) {
+                    renderMovie(data.name, { title, genre, year, url, watched: false });
+                }
+            } catch (e) {
+                console.error("Ошибка сохранения:", e);
+            }
+        }
+
+        window.toggleWatched = async function(key, newStatus) {
+            try {
+                await fetch(`${BASE_FIREBASE_URL}/${key}/watched.json`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(newStatus)
+                });
+                
+                const card = document.getElementById(`movie-${key}`);
+                if (card) {
+                    card.classList.toggle('watched', newStatus);
+                    const btn = card.querySelector('.btn-watched');
+                    btn.innerHTML = newStatus ? '✓ Просмотрено' : 'Смотреть';
+                    btn.setAttribute('onclick', `toggleWatched('${key}', ${!newStatus})`);
+                }
+            } catch (e) {
+                alert("Ошибка обновления статуса!");
+            }
+        }
+
+        window.deleteMovie = async function(key, event) {
+            if (confirm("Точно удалить этот фильм из списка?")) {
+                try {
+                    await fetch(`${BASE_FIREBASE_URL}/${key}.json`, {
+                        method: 'DELETE'
+                    });
+                    const card = document.getElementById(`movie-${key}`);
+                    if (card) card.remove();
+                    renderedKeys.delete(key);
+                } catch (e) {
+                    alert("Ошибка при удалении!");
+                }
+            }
+        }
+
+        // Виджет Cloudinary настроен так, чтобы можно было искать картинку/постер
+        const myWidget = cloudinary.createUploadWidget({
+            cloudName: CLOUD_NAME, 
+            uploadPreset: UPLOAD_PRESET,
+            sources: ['local', 'url', 'camera'],
+            multiple: false,
+            styles: {
+                palette: {
+                    window: "#121212",
+                    windowBorder: "#333333",
+                    tabIcon: "#FFFFFF",
+                    menuBg: "#1e1e1e",
+                    link: "#FFFFFF",
+                    action: "#FFFFFF",
+                    inactiveTabIcon: "#777777",
+                    error: "#F44236",
+                    inProgress: "#ffffff",
+                    complete: "#20B832",
+                    sourceBg: "#181818"
+                }
+            }
+        }, (error, result) => {
+            if (!error && result && result.event === "success") {
+                const posterUrl = result.info.secure_url;
+                askMovieDetails(posterUrl);
+            }
+        });
+
+        function askMovieDetails(posterUrl = '') {
+            const title = prompt("Введите название фильма:", "");
+            if (!title || title.trim() === "") return;
+
+            const genre = prompt("Введите жанр (например: Драма, Ужасы):", "Фильм");
+            const year = prompt("Введите год выпуска (необязательно):", "");
+            
+            saveMovieToFirebase(title, genre || 'Фильм', year || '', posterUrl);
+        }
+
+        document.getElementById("add_movie_btn").addEventListener("click", function(){
+            if (confirm("Добавить фильм с постером? Нажмите «OK» (выбрать/найти картинку) или «Отмена» (просто текстом).")) {
+                myWidget.open();
+            } else {
+                askMovieDetails('');
+            }
+        }, false);
+
+        loadMovies();
+    </script>
+</body>
+</html>
