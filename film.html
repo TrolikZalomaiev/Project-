@@ -190,6 +190,118 @@
             opacity: 1;
         }
 
+        /* Модальное окно для добавления фильма */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            padding: 20px;
+        }
+
+        .modal {
+            background: #1e1e1e;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 24px;
+            border-radius: 16px;
+            max-width: 400px;
+            width: 100%;
+            text-align: left;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+        }
+
+        .modal h3 {
+            color: #ffffff;
+            font-size: 18px;
+            margin-bottom: 16px;
+            font-weight: 500;
+        }
+
+        .modal label {
+            display: block;
+            font-size: 12px;
+            color: #b0b0b0;
+            margin-bottom: 6px;
+        }
+
+        .modal input {
+            width: 100%;
+            background: #121212;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 10px 14px;
+            color: #ffffff;
+            font-size: 14px;
+            margin-bottom: 16px;
+            outline: none;
+        }
+
+        .modal input:focus {
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .genres-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .genre-chip {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #e0e0e0;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 13px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+        }
+
+        .genre-chip:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .genre-chip.selected {
+            background: #ffffff;
+            color: #121212;
+            font-weight: 600;
+            border-color: #ffffff;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .modal-btn {
+            flex: 1;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn-cancel {
+            background: rgba(255, 255, 255, 0.05);
+            color: #b0b0b0;
+        }
+
+        .btn-submit {
+            background: #ffffff;
+            color: #121212;
+        }
+
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(15px); }
             to { opacity: 1; transform: translateY(0); }
@@ -207,6 +319,36 @@
 
     <div class="gallery" id="gallery"></div>
 
+    <!-- Модальное окно ввода фильма -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal">
+            <h3>Добавить фильм</h3>
+            
+            <label>Название фильма</label>
+            <input type="text" id="movieTitleInput" placeholder="Например: Начало">
+
+            <label>Год (необязательно)</label>
+            <input type="text" id="movieYearInput" placeholder="2010">
+
+            <label>Жанр (нажми на нужный)</label>
+            <div class="genres-grid" id="genresGrid">
+                <div class="genre-chip selected" data-genre="Драма">Драма</div>
+                <div class="genre-chip" data-genre="Комедия">Комедия</div>
+                <div class="genre-chip" data-genre="Боевик">Боевик</div>
+                <div class="genre-chip" data-genre="Триллер">Триллер</div>
+                <div class="genre-chip" data-genre="Ужасы">Ужасы</div>
+                <div class="genre-chip" data-genre="Фантастика">Фантастика</div>
+                <div class="genre-chip" data-genre="Мелодрама">Мелодрама</div>
+                <div class="genre-chip" data-genre="Детектив">Детектив</div>
+            </div>
+
+            <div class="modal-buttons">
+                <button class="modal-btn btn-cancel" id="modalCancel">Отмена</button>
+                <button class="modal-btn btn-submit" id="modalNext">Далее (Постер)</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         const CLOUD_NAME = "e6dgp4jb"; 
         const UPLOAD_PRESET = "yzxssnes";
@@ -215,6 +357,50 @@
         const gallery = document.getElementById('gallery');
         let renderedKeys = new Set();
         let temporaryMovieData = null;
+        let selectedGenre = "Драма";
+
+        // Логика выбора жанра кликом
+        document.querySelectorAll('.genre-chip').forEach(chip => {
+            chip.addEventListener('click', () => {
+                document.querySelectorAll('.genre-chip').forEach(c => c.classList.remove('selected'));
+                chip.classList.add('selected');
+                selectedGenre = chip.getAttribute('data-genre');
+            });
+        });
+
+        const modalOverlay = document.getElementById('modalOverlay');
+        const addMovieBtn = document.getElementById('add_movie_btn');
+        const modalCancel = document.getElementById('modalCancel');
+        const modalNext = document.getElementById('modalNext');
+        const titleInput = document.getElementById('movieTitleInput');
+        const yearInput = document.getElementById('movieYearInput');
+
+        addMovieBtn.addEventListener('click', () => {
+            titleInput.value = '';
+            yearInput.value = '';
+            modalOverlay.style.display = 'flex';
+        });
+
+        modalCancel.addEventListener('click', () => {
+            modalOverlay.style.display = 'none';
+        });
+
+        modalNext.addEventListener('click', () => {
+            const title = titleInput.value.trim();
+            if (!title) {
+                alert("Введите название фильма!");
+                return;
+            }
+
+            temporaryMovieData = {
+                title: title,
+                genre: selectedGenre,
+                year: yearInput.value.trim()
+            };
+
+            modalOverlay.style.display = 'none';
+            myWidget.open(); // Открываем выбор постера
+        });
 
         function renderMovie(key, data) {
             if (renderedKeys.has(key)) return;
@@ -353,49 +539,6 @@
                 }
             }
         });
-
-        document.getElementById("add_movie_btn").addEventListener("click", function(){
-            const title = prompt("Введите название фильма:", "");
-            if (!title || title.trim() === "") return;
-
-            const year = prompt("Введите год выпуска (необязательно):", "");
-
-            // Выбор жанра из списка с помощью цифр
-            const genreChoice = prompt(
-                "Выберите жанр, введя его номер:\n\n" +
-                "1. Драма\n" +
-                "2. Комедия\n" +
-                "3. Боевик\n" +
-                "4. Триллер\n" +
-                "5. Ужасы\n" +
-                "6. Фантастика\n" +
-                "7. Мелодрама\n" +
-                "8. Детектив",
-                "1"
-            );
-
-            const genresMap = {
-                "1": "Драма",
-                "2": "Комедия",
-                "3": "Боевик",
-                "4": "Триллер",
-                "5": "Ужасы",
-                "6": "Фантастика",
-                "7": "Мелодрама",
-                "8": "Детектив"
-            };
-
-            const selectedGenre = genresMap[genreChoice] || "Фильм";
-
-            temporaryMovieData = {
-                title: title.trim(),
-                genre: selectedGenre,
-                year: year ? year.trim() : ''
-            };
-
-            // Открываем виджет для поиска постера
-            myWidget.open();
-        }, false);
 
         loadMovies();
     </script>
