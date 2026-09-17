@@ -4,8 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Список фильмов</title>
-    <!-- Подключаем виджет Cloudinary -->
-    <script src="https://upload-widget.cloudinary.com/global/all.js" type="text/javascript"></script>
     <style>
         * {
             box-sizing: border-box;
@@ -26,7 +24,7 @@
         }
 
         .nav-box {
-            max-width: 950px;
+            max-width: 800px;
             width: 100%;
             display: flex;
             justify-content: space-between;
@@ -79,10 +77,10 @@
         }
 
         .gallery {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 25px;
-            max-width: 950px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            max-width: 800px;
             width: 100%;
             animation: fadeIn 1.5s ease-out;
             padding-bottom: 40px;
@@ -91,13 +89,14 @@
         .movie-card {
             position: relative;
             background: #1e1e1e;
-            padding: 16px;
+            padding: 18px 20px;
             border-radius: 12px;
             border: 1px solid rgba(255, 255, 255, 0.06);
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
             transition: all 0.3s ease;
             display: flex;
-            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
             text-align: left;
         }
 
@@ -114,54 +113,47 @@
             text-decoration: line-through;
         }
 
-        .movie-img {
-            width: 100%;
-            height: 340px;
-            object-fit: cover;
-            border-radius: 8px;
-            background-color: #2a2a2a;
-            margin-bottom: 12px;
+        .movie-details {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            flex: 1;
+            padding-right: 15px;
         }
 
         .movie-title {
-            font-size: 16px;
+            font-size: 17px;
             font-weight: 600;
             color: #ffffff;
-            margin-bottom: 6px;
         }
 
         .movie-info {
             display: flex;
             gap: 8px;
             align-items: center;
-            font-size: 12px;
+            font-size: 13px;
             color: #b0b0b0;
-            margin-bottom: 14px;
-            flex-wrap: wrap;
         }
 
         .movie-genre {
             background: rgba(255, 255, 255, 0.08);
-            padding: 4px 8px;
+            padding: 2px 8px;
             border-radius: 6px;
         }
 
         .movie-actions {
             display: flex;
-            justify-content: space-between;
+            gap: 10px;
             align-items: center;
-            margin-top: auto;
-            padding-top: 10px;
-            border-top: 1px solid rgba(255, 255, 255, 0.05);
         }
 
         .btn-watched {
             background: none;
             border: 1px solid rgba(255, 255, 255, 0.2);
             color: #b0b0b0;
-            padding: 6px 12px;
-            border-radius: 6px;
-            font-size: 12px;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 13px;
             cursor: pointer;
             transition: all 0.2s ease;
         }
@@ -183,6 +175,7 @@
             font-size: 16px;
             cursor: pointer;
             opacity: 0.6;
+            padding: 6px;
             transition: opacity 0.2s;
         }
 
@@ -190,7 +183,7 @@
             opacity: 1;
         }
 
-        /* Модальное окно для добавления фильма */
+        /* Модальное окно */
         .modal-overlay {
             position: fixed;
             top: 0;
@@ -330,7 +323,7 @@
             <label>Год (необязательно)</label>
             <input type="text" id="movieYearInput" placeholder="2010">
 
-            <label>Жанр (нажми на нужный)</label>
+            <label>Жанр</label>
             <div class="genres-grid" id="genresGrid">
                 <div class="genre-chip selected" data-genre="Драма">Драма</div>
                 <div class="genre-chip" data-genre="Комедия">Комедия</div>
@@ -344,22 +337,18 @@
 
             <div class="modal-buttons">
                 <button class="modal-btn btn-cancel" id="modalCancel">Отмена</button>
-                <button class="modal-btn btn-submit" id="modalNext">Далее (Постер)</button>
+                <button class="modal-btn btn-submit" id="modalSubmit">Добавить</button>
             </div>
         </div>
     </div>
 
     <script>
-        const CLOUD_NAME = "e6dgp4jb"; 
-        const UPLOAD_PRESET = "yzxssnes";
         const BASE_FIREBASE_URL = "https://films-c651e-default-rtdb.firebaseio.com";
 
         const gallery = document.getElementById('gallery');
         let renderedKeys = new Set();
-        let temporaryMovieData = null;
         let selectedGenre = "Драма";
 
-        // Логика выбора жанра кликом
         document.querySelectorAll('.genre-chip').forEach(chip => {
             chip.addEventListener('click', () => {
                 document.querySelectorAll('.genre-chip').forEach(c => c.classList.remove('selected'));
@@ -371,7 +360,7 @@
         const modalOverlay = document.getElementById('modalOverlay');
         const addMovieBtn = document.getElementById('add_movie_btn');
         const modalCancel = document.getElementById('modalCancel');
-        const modalNext = document.getElementById('modalNext');
+        const modalSubmit = document.getElementById('modalSubmit');
         const titleInput = document.getElementById('movieTitleInput');
         const yearInput = document.getElementById('movieYearInput');
 
@@ -385,21 +374,15 @@
             modalOverlay.style.display = 'none';
         });
 
-        modalNext.addEventListener('click', () => {
+        modalSubmit.addEventListener('click', () => {
             const title = titleInput.value.trim();
             if (!title) {
                 alert("Введите название фильма!");
                 return;
             }
 
-            temporaryMovieData = {
-                title: title,
-                genre: selectedGenre,
-                year: yearInput.value.trim()
-            };
-
+            saveMovieToFirebase(title, selectedGenre, yearInput.value.trim());
             modalOverlay.style.display = 'none';
-            myWidget.open(); // Открываем выбор постера
         });
 
         function renderMovie(key, data) {
@@ -410,17 +393,13 @@
             card.className = `movie-card ${data.watched ? 'watched' : ''}`;
             card.id = `movie-${key}`;
 
-            let imgHtml = '';
-            if (data.url) {
-                imgHtml = `<img src="${data.url}" class="movie-img" alt="Постер">`;
-            }
-
             card.innerHTML = `
-                ${imgHtml}
-                <div class="movie-title">${escapeHtml(data.title)}</div>
-                <div class="movie-info">
-                    <span class="movie-genre">${escapeHtml(data.genre)}</span>
-                    ${data.year ? `<span>• ${escapeHtml(data.year)}</span>` : ''}
+                <div class="movie-details">
+                    <div class="movie-title">${escapeHtml(data.title)}</div>
+                    <div class="movie-info">
+                        <span class="movie-genre">${escapeHtml(data.genre)}</span>
+                        ${data.year ? `<span>• ${escapeHtml(data.year)}</span>` : ''}
+                    </div>
                 </div>
                 <div class="movie-actions">
                     <button class="btn-watched" onclick="toggleWatched('${key}', ${!data.watched})">
@@ -452,7 +431,7 @@
             }
         }
 
-        async function saveMovieToFirebase(title, genre, year, url) {
+        async function saveMovieToFirebase(title, genre, year) {
             try {
                 const res = await fetch(`${BASE_FIREBASE_URL}.json`, {
                     method: 'POST',
@@ -461,14 +440,13 @@
                         title: title, 
                         genre: genre,
                         year: year || '',
-                        url: url || '',
                         watched: false,
                         timestamp: Date.now() 
                     })
                 });
                 const data = await res.json();
                 if (data && data.name) {
-                    renderMovie(data.name, { title, genre, year, url, watched: false });
+                    renderMovie(data.name, { title, genre, year, watched: false });
                 }
             } catch (e) {
                 console.error("Ошибка сохранения:", e);
@@ -509,36 +487,6 @@
                 }
             }
         }
-
-        const myWidget = cloudinary.createUploadWidget({
-            cloudName: CLOUD_NAME, 
-            uploadPreset: UPLOAD_PRESET,
-            sources: ['local', 'url', 'camera'],
-            multiple: false,
-            styles: {
-                palette: {
-                    window: "#121212",
-                    windowBorder: "#333333",
-                    tabIcon: "#FFFFFF",
-                    menuBg: "#1e1e1e",
-                    link: "#FFFFFF",
-                    action: "#FFFFFF",
-                    inactiveTabIcon: "#777777",
-                    error: "#F44236",
-                    inProgress: "#ffffff",
-                    complete: "#20B832",
-                    sourceBg: "#181818"
-                }
-            }
-        }, (error, result) => {
-            if (!error && result && result.event === "success") {
-                const posterUrl = result.info.secure_url;
-                if (temporaryMovieData) {
-                    saveMovieToFirebase(temporaryMovieData.title, temporaryMovieData.genre, temporaryMovieData.year, posterUrl);
-                    temporaryMovieData = null;
-                }
-            }
-        });
 
         loadMovies();
     </script>
