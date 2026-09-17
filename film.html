@@ -210,12 +210,11 @@
     <script>
         const CLOUD_NAME = "e6dgp4jb"; 
         const UPLOAD_PRESET = "yzxssnes";
-
-        
-        const BASE_FIREBASE_URL = "https://films-c651e-default-rtdb.firebaseio.com/";
+        const BASE_FIREBASE_URL = "https://films-c651e-default-rtdb.firebaseio.com";
 
         const gallery = document.getElementById('gallery');
         let renderedKeys = new Set();
+        let temporaryMovieData = null;
 
         function renderMovie(key, data) {
             if (renderedKeys.has(key)) return;
@@ -254,7 +253,6 @@
         }
 
         async function loadMovies() {
-            if (!BASE_FIREBASE_URL || BASE_FIREBASE_URL.includes("ВСТАВЬ")) return;
             try {
                 const response = await fetch(`${BASE_FIREBASE_URL}.json`);
                 const data = await response.json();
@@ -311,7 +309,7 @@
             }
         }
 
-        window.deleteMovie = async function(key, event) {
+        window.deleteMovie = async function(key) {
             if (confirm("Точно удалить этот фильм из списка?")) {
                 try {
                     await fetch(`${BASE_FIREBASE_URL}/${key}.json`, {
@@ -326,7 +324,6 @@
             }
         }
 
-        // Виджет Cloudinary настроен так, чтобы можно было искать картинку/постер
         const myWidget = cloudinary.createUploadWidget({
             cloudName: CLOUD_NAME, 
             uploadPreset: UPLOAD_PRESET,
@@ -350,26 +347,54 @@
         }, (error, result) => {
             if (!error && result && result.event === "success") {
                 const posterUrl = result.info.secure_url;
-                askMovieDetails(posterUrl);
+                if (temporaryMovieData) {
+                    saveMovieToFirebase(temporaryMovieData.title, temporaryMovieData.genre, temporaryMovieData.year, posterUrl);
+                    temporaryMovieData = null;
+                }
             }
         });
 
-        function askMovieDetails(posterUrl = '') {
+        document.getElementById("add_movie_btn").addEventListener("click", function(){
             const title = prompt("Введите название фильма:", "");
             if (!title || title.trim() === "") return;
 
-            const genre = prompt("Введите жанр (например: Драма, Ужасы):", "Фильм");
             const year = prompt("Введите год выпуска (необязательно):", "");
-            
-            saveMovieToFirebase(title, genre || 'Фильм', year || '', posterUrl);
-        }
 
-        document.getElementById("add_movie_btn").addEventListener("click", function(){
-            if (confirm("Добавить фильм с постером? Нажмите «OK» (выбрать/найти картинку) или «Отмена» (просто текстом).")) {
-                myWidget.open();
-            } else {
-                askMovieDetails('');
-            }
+            // Выбор жанра из списка с помощью цифр
+            const genreChoice = prompt(
+                "Выберите жанр, введя его номер:\n\n" +
+                "1. Драма\n" +
+                "2. Комедия\n" +
+                "3. Боевик\n" +
+                "4. Триллер\n" +
+                "5. Ужасы\n" +
+                "6. Фантастика\n" +
+                "7. Мелодрама\n" +
+                "8. Детектив",
+                "1"
+            );
+
+            const genresMap = {
+                "1": "Драма",
+                "2": "Комедия",
+                "3": "Боевик",
+                "4": "Триллер",
+                "5": "Ужасы",
+                "6": "Фантастика",
+                "7": "Мелодрама",
+                "8": "Детектив"
+            };
+
+            const selectedGenre = genresMap[genreChoice] || "Фильм";
+
+            temporaryMovieData = {
+                title: title.trim(),
+                genre: selectedGenre,
+                year: year ? year.trim() : ''
+            };
+
+            // Открываем виджет для поиска постера
+            myWidget.open();
         }, false);
 
         loadMovies();
